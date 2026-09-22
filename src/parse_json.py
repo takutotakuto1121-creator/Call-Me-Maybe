@@ -1,6 +1,6 @@
 import json
 import sys
-import argparse
+import args
 from pydantic import BaseModel, Field
 
 class Options(BaseModel):
@@ -25,17 +25,17 @@ class Parse:
         self.options = get_options()
 
     def get_options(self) -> Options:
-        args = args.parse_args()
+        arg = args.parse_args()
         try:
             options = Options(
-                input_prompt=args.input
-                input_functions=args.function_definition
-                output_path=args.output
+                input_prompt=arg.input
+                input_functions=arg.function_definition
+                output_path=arg.output
             )
             return options
         except ValidationError as e:
             raise RuntimeError("Invalid option: {e}")
-    
+
     def load_json(self) -> list[dict]:
         # 構文的に正しいJSONか、そもそもfileがあるのかをチェック
         try:
@@ -70,18 +70,3 @@ class Parse:
             return functions_item
         except ValidationError:
             raise RuntimeError(f"Invalid JSON ")
-
-
-        
-
-
-        
-
-        
-
-
-        
-        
-        
-    
-
