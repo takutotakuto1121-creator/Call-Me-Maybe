@@ -46,7 +46,7 @@ def main():
     real_prompt = (
         f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
         f"<|im_start|>user\n{prompt.prompt}<|im_end|>\n"
-        f"<|im_start|>assistant\n<think>\n"
+        f"<|im_start|>assistant\n"
         # '{\n   "prompt": "'
     )
     results += llm.constrained_generate(real_prompt)
