@@ -32,6 +32,10 @@ class JsonState(BaseModel):
     in_value: bool = Field(default=False)
     escaped: bool = Field(default=False)
     allow_close: bool = Field(default=False)
+    has_prompt: bool = Field(default=False)
+    has_name: bool = Field(default=False)
+    has_returns: bool = Field(default=False)
+    is_space: bool = Field(default=False)
 
 
 class JsonChecker:
@@ -71,15 +75,24 @@ class JsonChecker:
 
         # ---- 文字列の外、Modeごとに判断 ----
         if self.state.mode == Mode.START:
-            if c == "{":
-                self.state.mode = Mode.OBJ_KEY_OR_CLOSE
-                self.state.allow_close = True
+            if c == "{" and self.state.is_space is False:
+                self.state.is_space = True
                 return True
+            if (c == " " or c == "\n") and self.state.is_space is True:
+                if c == '"':
+                    self.state.mode = Mode.OBJ_KEY_OR_CLOSE
+                    self.state.is_space = False
+                else:
+            if c == ""
+
+
             else:
                 return False
 
         elif self.state.mode == Mode.OBJ_KEY_OR_CLOSE:
-            if c == '"':
+            if c == " " or c == "\n":
+                return True
+            elif c == '"':
                 self.state.in_string = True
                 self.state.in_key = True
                 return True
@@ -120,6 +133,3 @@ class JsonChecker:
 
     def is_completed(self) -> bool:
         return self.state.mode == Mode.DONE
-
-
-            

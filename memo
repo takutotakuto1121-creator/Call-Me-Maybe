@@ -1,3 +1,58 @@
 JsonChecker
     escapeへの対応
     valueのnumberへの対応
+
+そもそもJSON形式の制限しかしてない
+→prrompt: とかname: の縛りをしないといけない
+状態遷移ごと書き換え？
+JSON<-❌
+課題にあったJSON
+
+
+
+むずすぎる
+→課題要件に沿ったJSONに限定して実装
+
+
+状態列挙
+START_SPACE: " "を待つ
+START: '{'を待つ
+PROMPT_LINE_BREAK: "\n" を待つ
+PROMPT_SPACE: " "を待つ。(space_countでカウントする)
+PROMPT_KEY: "prompt"を待つ。(wordをカウントして"prompt": "一文字に制限)
+PROMPT_VALUE: string or "を待つ "があれば次へ
+PROMPT_COMMA: ,を待つ。
+NAME_LINE_BREAL: "\n"を待つ。
+NAME_SPACE: " "を待つ。(word_countをする)
+NAME_KEY: "name": "をいい感じに
+NAME_VALUE: string or "を待つ "があれば次へ
+NAME_COMMA: ,を待つ。
+PARAMETER_LINE_BREAK: "\n"を待つ。
+PARAMETER_SPACE: " "を待つ。word_countでいい感じに
+PARAMETER_KEY: "patameter": "{"を待つ。
+---------------(loop)
+PARAMETER_VALUE_KEY: string or "を待つ。"書きたら、次へ
+PARAMETER_VALUE_COLON_SPACE: : を待つ。
+PARAMETER_VALUE_VALUE: "string or number
+PARAMETER_VALUE_COMMMA_SPACE_DOUBLE_QUOTE_OR_RIGHT_BRACE: , " or }を待つ。
+----------------(loop)
+END_LINE_BREAK: "\n"を待つ。
+END_SPACE: " "を待つ
+END: }を待つ。
+
+(loop)について
+KEY -> COLON_SPACE -> VALUE -> COMMA_... -> KEY
+                                         -> END_LINE_BREAK
+
+PARAMETER_VALUE_VALUEについて
+string, number, object, array, true, false, null
+が許可されている
+-> string, tfn, numberはOK
+-> object, arrayまで含めるとなんでもありできつすぎじゃね
+
+numberの状態列挙
+
+
+
+
+
