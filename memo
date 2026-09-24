@@ -9,7 +9,6 @@ JSON<-❌
 課題にあったJSON
 
 
-
 むずすぎる
 →課題要件に沿ったJSONに限定して実装
 
@@ -50,9 +49,15 @@ string, number, object, array, true, false, null
 -> string, tfn, numberはOK
 -> object, arrayまで含めるとなんでもありできつすぎじゃね
 
+
+# PARAMETER_VALUE_VALUEのぶぶん
 numberの状態列挙
-
-
-
-
-
+START: -, 0, 1~9, e/E を待つ。
+MINUS: 0, 1~9を待つ
+INT_ZERO: . or , を待つ。
+INT: 0~9 or . or , or e/Eをまつ
+FRAC_START: 0~9 を待つ
+FRAC: 0~9 or , or e/Eを待つ
+EXP_START: +/-, 0~9を待つ。
+EXP_SIGN: 0~9 を待つ。
+EXP: 0~9 or , を待つ。
