@@ -13,7 +13,7 @@ run:
 	uv run python3 -m src
 
 test:
-	uv run python3 -m src --test
+	uv run python3 -m src --test 1
 
 debug:
 	uv run python3 --debug -m src

@@ -46,10 +46,13 @@ class NumState(Enum):
 
 
 class JsonState(BaseModel):
-    mode: Mode = Field(default=Mode.NAME_VALUE)
+    mode: Mode = Field(default=Mode.PROMPT_VALUE)
     num_state: NumState = Field(default=NumState.START)
     in_string: bool = Field(default=True)
     in_number: bool = Field(default=False)
+    in_escape: bool = Field(default=False)
+    in_hex: bool = Field(default=False)
+    escape_num: int = Field(default=0)
     literal_target: str = Field(default="")
     literal_num: int = Field(default=0)
     tfn_target: str = Field(default="")
@@ -60,6 +63,7 @@ class JsonState(BaseModel):
     exist_space: bool = Field(default=False)
     exist_brace: bool = Field(default=False)
     exist_line_break: bool = Field(default=False)
+
 
 
 class JsonChecker:
@@ -301,6 +305,11 @@ class JsonChecker:
 
     def feed_string(self, c: str) -> bool:
         if c == '"':
+            if self.state.in_escape:
+                self.state.in_escape = False
+                return True
+            elif self.state.in_hex:
+                return False
             self.state.in_string = False
             if self.state.mode == Mode.PROMPT_VALUE:
                 self.state.mode = Mode.PROMPT_COMMA
@@ -311,6 +320,34 @@ class JsonChecker:
             elif self.state.mode == Mode.PARAMETER_VALUE_VALUE:
                 self.state.mode = Mode.PARAMETER_VALUE_COMMA_SPACE_QUOTE_OR_CLOSE
             return True
+
+        elif c == '\\' and not self.state.in_escape and not self.state.in_hex:
+            self.state.in_escape = True
+            return True
+        elif c == 'u' and self.state.in_escape:
+            self.state.in_hex = True
+            self.state.in_escape = False
+            return True
+        elif self.state.in_escape:
+            if c in ('\\', '/', 'b', 'f', 'n', 'r', 't'):
+                self.state.in_escape = False
+                return True
+            else:
+                return False
+        elif self.state.in_hex:
+            if c in "0123456789abcdefABCDEF" and self.state.escape_num < 4:
+                if self.state.escape_num < 3:
+                    self.state.escape_num += 1
+                    return True
+                elif self.state.escape_num == 3:
+                    self.state.escape_num = 0
+                    self.state.in_hex = False
+                    self.state.in_escape = False
+                    return True
+            else:
+                return False
+        elif ord(c) < 0x20:
+            return False
         else:
             return True
 
