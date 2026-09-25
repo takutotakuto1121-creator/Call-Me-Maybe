@@ -38,6 +38,8 @@ def make_json_output():
     args = parse.parse_args()
     if args.test is not None:
         test = True
+    else:
+        test = False
 
     small_llm = Small_LLM_Model()
     json_checker = JsonChecker()
@@ -47,7 +49,7 @@ def make_json_output():
     functions = parse.load_functions()
     system_prompt = build_system_prompt(functions)
 
-    if False:
+    if test:
         prompt = prompts[0]
         llm.checker = JsonChecker()
         result = '  {\n    "prompt": "'
@@ -79,12 +81,12 @@ def make_json_output():
                 f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
                 f"<|im_start|>user\n{prompt.prompt}<|im_end|>\n"
                 f"<|im_start|>assistant\n"
-                f"{results}"
+                f"{result}"
             )
             result += llm.constrained_generate(real_prompt)
             results += result
         results += "]"
-        with open("data/output/functions_calling_results.json", mode="w") as f:
+        with open("data/output/function_calling_results.json", mode="w") as f:
             f.write(results)
 
 
