@@ -66,6 +66,9 @@ TODO:
     エスケープシーケンスへの対応
     スピードの改善
     できれば、parametersのvalueのobject, arrayへの対応
-    （これは必須ではない？）
+    （これは必須ではない？etc表記やし）
     最後にjson.load(), pydanticを用いてバリデーション
     不正ならsystem_promptにその旨を追加して再生成
+
+pydanticで最後にバリデーション
+    ？？？？？？？

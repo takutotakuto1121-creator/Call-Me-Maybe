@@ -33,7 +33,7 @@ def build_system_prompt(functions: list[FunctionItem]) -> list[str]:
     )
 
 
-def make_json_output():
+def make_json_output(system_prompt: str):
     parse = Parse()
     args = parse.parse_args()
     if args.test is not None:
@@ -47,15 +47,11 @@ def make_json_output():
 
     prompts = parse.load_prompts()
     functions = parse.load_functions()
-    system_prompt = build_system_prompt(functions)
 
     if test:
         prompt = prompts[0]
         llm.checker = JsonChecker()
         result = '  {\n    "prompt": "'
-        result_1 = f"{prompt.prompt}"
-        result_2 = '",\n    "name": "'
-        result = result + result_1 + result_2
         # print(results)
         # for prompt in prompts:
         real_prompt = (
@@ -88,7 +84,23 @@ def make_json_output():
         results += "]"
         with open("data/output/function_calling_results.json", mode="w") as f:
             f.write(results)
+        try:
+            content = parse.load_json("data/output/function_calling_results.json")
+            # ここでpydantic
+        except RuntimeError as e:
+            system_prompt += f"DON'T make this error {e}"
+            make_json_output(system_prompt)
+        except ValidationError as e:
+            system_prompt += f"DON'T make this error {e}"
+            make_json_output(system_prompt)
+
+
+def main():
+    parse = Parse()
+    functions = parse.load_functions()
+    system_prompt = build_system_prompt(functions)
+    make_json_output(system_prompt)
 
 
 if __name__ == "__main__":
-    make_json_output()
+    main()
