@@ -46,9 +46,9 @@ class NumState(Enum):
 
 
 class JsonState(BaseModel):
-    mode: Mode = Field(default=Mode.START_SPACE)
+    mode: Mode = Field(default=Mode.NAME_VALUE)
     num_state: NumState = Field(default=NumState.START)
-    in_string: bool = Field(default=False)
+    in_string: bool = Field(default=True)
     in_number: bool = Field(default=False)
     literal_target: str = Field(default="")
     literal_num: int = Field(default=0)
@@ -59,6 +59,7 @@ class JsonState(BaseModel):
     exist_comma: bool = Field(default=False)
     exist_space: bool = Field(default=False)
     exist_brace: bool = Field(default=False)
+    exist_line_break: bool = Field(default=False)
 
 
 class JsonChecker:
@@ -75,8 +76,12 @@ class JsonChecker:
         self.state = snapshot.model_copy(deep=True)
 
     def check(self, token_text: str) -> bool:
+        if not token_text:
+            return False
+        snapshot = self.state.model_copy(deep=True)
         for c in token_text:
             if not self.check_char(c):
+                self.state = snapshot.model_copy(deep=True)
                 return False
         return True
 
@@ -248,7 +253,8 @@ class JsonChecker:
             elif c == '"' and self.state.exist_comma and self.state.exist_space:
                 self.state.exist_comma = False
                 self.state.exist_space = False
-                self.state.mode = Mode.PARAMETER_KEY
+                self.state.in_string = True
+                self.state.mode = Mode.PARAMETER_VALUE_KEY
                 return True
             elif c == '}' and not self.state.exist_comma and not self.state.exist_space:
                 self.state.mode = Mode.END_LINE_BREAK
@@ -275,11 +281,15 @@ class JsonChecker:
                 return False
 
         elif mode == Mode.END:
-            if c == '}' and not self.state.exist_brace:
+            if c == '}' and not self.state.exist_brace and not self.state.exist_comma:
                 self.state.exist_brace = True
                 return True
-            elif c == ',' and self.state.exist_comma:
+            elif c == ',' and self.state.exist_brace and not self.state.exist_comma:
+                self.state.exist_comma = True
+                return True
+            elif c == '\n' and self.state.exist_brace and self.state.exist_comma:
                 self.state.exist_brace = False
+                self.state.exist_comma = False
                 self.state.mode = Mode.DONE
                 return True
             else:

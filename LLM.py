@@ -44,7 +44,7 @@ def main():
         f"<|im_start|>user\n{user_prompt}<|im_end|>\n"
         f"<|im_start|>assistant\n"
     )
-    result = llm_simple.generate(prompt2, max_new_tokens=400)
+    result = llm_simple.generate(prompt2, max_new_tokens=100)
     print("result: ")
     print(result)
     print()

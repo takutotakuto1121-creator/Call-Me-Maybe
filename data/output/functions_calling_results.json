@@ -1,0 +1,68 @@
+[
+  {
+    "prompt": "Reverse the string 'hello'",
+    "name": "  {
+    ",
+    "parameters": {"s": "hello"}
+  },
+  {
+    "prompt": "What is the sum of 265 and 345?",
+    "name": "  {
+    ",
+    "parameters": {"regex": "hello", "replacement": "hi"}
+  },
+  {
+    "prompt": "Greet shrek",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Greet john",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Reverse the string 'hello'",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Reverse the string 'world'",
+    "name": "  {
+    ",
+    "parameters": {"regex": "hello", "replacement": "hi"}
+  },
+  {
+    "prompt": "What is the square root of 16?",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Calculate the square root of 144",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Replace all numbers in "Hello 34 I'm 233 years old" with NUMBERS",
+    "name": "  {
+    ",
+    "parameters": {"a": 2.0, "b": 3.0}
+  },
+  {
+    "prompt": "Replace all vowels in 'Programming is fun' with asterisks",
+    "name": "  {
+    ",
+    "parameters": {"regex": "hello", "replacement": "hi"}
+  },
+  {
+    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
+    "name": "  {
+    ",
+    "parameters": {"regex": "hello", "replacement": "hi"}
+  },
+]
