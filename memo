@@ -61,3 +61,11 @@ FRAC: 0~9 or , or e/Eを待つ
 EXP_START: +/-, 0~9を待つ。
 EXP_SIGN: 0~9 を待つ。
 EXP: 0~9 or , を待つ。
+
+TODO:
+    エスケープシーケンスへの対応
+    スピードの改善
+    できれば、parametersのvalueのobject, arrayへの対応
+    （これは必須ではない？）
+    最後にjson.load(), pydanticを用いてバリデーション
+    不正ならsystem_promptにその旨を追加して再生成
