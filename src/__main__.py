@@ -3,6 +3,14 @@ from .constrained_llm import ConstrainedLLM
 from .check_json import JsonChecker
 from llm_sdk import Small_LLM_Model
 import sys
+from typing import Any
+from pydantic import BaseModel, ValidationError
+
+
+class FunctionCallResult(BaseModel):
+    prompt: str
+    name: str
+    parameters: dict[str, Any]
 
 
 def build_system_prompt(functions: list[FunctionItem]) -> list[str]:
@@ -40,10 +48,14 @@ def make_json_output(system_prompt: str):
         test = True
     else:
         test = False
+    if args.animation is not None:
+        animation = True
+    else:
+        animation = False
 
     small_llm = Small_LLM_Model()
     json_checker = JsonChecker()
-    llm = ConstrainedLLM(small_llm, json_checker, True)
+    llm = ConstrainedLLM(small_llm, json_checker, animation)
 
     prompts = parse.load_prompts()
     functions = parse.load_functions()
@@ -51,14 +63,13 @@ def make_json_output(system_prompt: str):
     if test:
         prompt = prompts[0]
         llm.checker = JsonChecker()
-        result = '  {\n    "prompt": "'
+        result = ""
         # print(results)
         # for prompt in prompts:
         real_prompt = (
             f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
             f"<|im_start|>user\n{prompt.prompt}<|im_end|>\n"
             f"<|im_start|>assistant\n"
-            f"{result}"
         )
         result += llm.constrained_generate(real_prompt)
         print(result)
@@ -67,26 +78,23 @@ def make_json_output(system_prompt: str):
         results = "[\n"
         for prompt in prompts:
             llm.checker = JsonChecker()
-            result = '  {\n    "prompt": "'
-            result_1 = f"{prompt.prompt}"
-            result_2 = '",\n    "name": "'
-            result = result + result_1 + result_2
+            result = ""
             # print(results)
             # for prompt in prompts:
             real_prompt = (
                 f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
                 f"<|im_start|>user\n{prompt.prompt}<|im_end|>\n"
                 f"<|im_start|>assistant\n"
-                f"{result}"
             )
             result += llm.constrained_generate(real_prompt)
             results += result
-        results += "]"
+        results = results[:-2]
+        results += "\n]"
         with open("data/output/function_calling_results.json", mode="w") as f:
             f.write(results)
         try:
             content = parse.load_json("data/output/function_calling_results.json")
-            # ここでpydantic
+            [FunctionCallResult(**item) for item in content]
         except RuntimeError as e:
             system_prompt += f"DON'T make this error {e}"
             make_json_output(system_prompt)

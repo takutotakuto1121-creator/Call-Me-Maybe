@@ -29,6 +29,7 @@ class Parse:
         parser.add_argument("--input", type=str, default=None)
         parser.add_argument("--output", type=str, default=None)
         parser.add_argument('--test', type=str, default=None)
+        parser.add_argument('--animation', type=str, default=None)
         return parser.parse_args()
 
     def get_options(self) -> Options:
