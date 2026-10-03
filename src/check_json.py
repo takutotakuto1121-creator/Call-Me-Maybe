@@ -46,9 +46,9 @@ class NumState(Enum):
 
 
 class JsonState(BaseModel):
-    mode: Mode = Field(default=Mode.PROMPT_VALUE)
+    mode: Mode = Field(default=Mode.START_SPACE)
     num_state: NumState = Field(default=NumState.START)
-    in_string: bool = Field(default=True)
+    in_string: bool = Field(default=False)
     in_number: bool = Field(default=False)
     in_escape: bool = Field(default=False)
     in_hex: bool = Field(default=False)

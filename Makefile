@@ -4,19 +4,19 @@ FLAGS = --warn-return-any --warn-unused-ignores \
 --ignore-missing-imports --disallow-untyped-defs \
 --check-untyped-defs
 
-.PHONY = install, run, test, debug, clean, lint, lint-strict
+.PHONY = install run test debug clean lint lint-strict
 
 install:
-	uv add -r pyproject.toml
+	uv pip install -r .
 
 run:
-	uv run python3 -m src
+	uv run python3 -m src --animation 1
 
 test:
-	uv run python3 -m src --test 1
+	uv run python3 -m src --test 1 --animation 1
 
 debug:
-	uv run python3 --debug -m src
+	uv run python3 -pdb -m src
 
 clean:
 	echo "a"
