@@ -3,6 +3,7 @@ from .check_json import JsonChecker
 import json
 import math
 import sys
+import numpy as np
 
 class ConstrainedLLM:
     def __init__(self, model: Small_LLM_Model, checker: JsonChecker, animation: bool):
@@ -32,7 +33,9 @@ class ConstrainedLLM:
         for _ in range(100):
             saved_state = self.checker.snapshot()
             logits: list[float] = self.model.get_logits_from_input_ids(token_ids)
-            sorted_indices = sorted(range(len(logits)), key=lambda i: logits[i], reverse=True)
+
+            logits_arr = np.array(logits)
+            sorted_indices = np.argsort(-logits_arr)
             masked_logits = [-math.inf] * len(logits)
             valid_token_found = False
 
@@ -42,7 +45,7 @@ class ConstrainedLLM:
                     self.checker.restore(saved_state)
                     valid_token_found = True
                     break
-            
+
             else:
                 self.checker.restore(saved_state)
             

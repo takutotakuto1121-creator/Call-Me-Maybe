@@ -10,6 +10,9 @@ install:
 	uv pip install -r .
 
 run:
+	uv run python3 -m src
+
+animation:
 	uv run python3 -m src --animation 1
 
 test:

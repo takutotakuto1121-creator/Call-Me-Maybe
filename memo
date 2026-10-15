@@ -70,5 +70,4 @@ TODO:
     最後にjson.load(), pydanticを用いてバリデーション
     不正ならsystem_promptにその旨を追加して再生成
 
-pydanticで最後にバリデーション
-    ？？？？？？？
+pydanticで最後にバリデーショnn
