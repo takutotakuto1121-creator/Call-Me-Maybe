@@ -22,7 +22,12 @@ debug:
 	uv run python3 -pdb -m src
 
 clean:
-	echo "a"
+	rm -rf */__pycache__/
+	rm -rf .vscode/
+	rm -rf .python-version
+
+fclean: clean
+	rm -rf .venv/
 
 lint:
 	$(FLAKE8) src

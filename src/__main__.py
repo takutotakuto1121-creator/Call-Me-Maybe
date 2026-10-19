@@ -1,8 +1,7 @@
-from .parse_json import Options, Parse, FunctionItem
+from .parse_json import Parse, FunctionItem
 from .constrained_llm import ConstrainedLLM
 from .check_json import JsonChecker
 from llm_sdk import Small_LLM_Model
-import sys
 from typing import Any
 from pydantic import BaseModel, ValidationError
 
@@ -72,7 +71,6 @@ def make_json_output(system_prompt: str):
             f"<|im_start|>assistant\n"
         )
         result += llm.constrained_generate(real_prompt)
-        print(result)
 
     else:
         results = "[\n"
