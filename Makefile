@@ -25,6 +25,7 @@ clean:
 	rm -rf */__pycache__/
 	rm -rf .vscode/
 	rm -rf .python-version
+	rm -rf .mypy_cache/
 
 fclean: clean
 	rm -rf .venv/

@@ -65,7 +65,6 @@ class JsonState(BaseModel):
     exist_line_break: bool = Field(default=False)
 
 
-
 class JsonChecker:
     def __init__(self) -> None:
         self.state = JsonState()
@@ -107,7 +106,7 @@ class JsonChecker:
         if self.state.tfn_target:
             return self.feed_tfn(c)
 
-        #---- それ以外はModeで ----
+        # ---- それ以外はModeで ----
         if mode == Mode.START_SPACE:
             if c == " ":
                 self.state.space_num += 1
@@ -251,16 +250,19 @@ class JsonChecker:
             if c == ',' and not self.state.exist_comma:
                 self.state.exist_comma = True
                 return True
-            elif c == ' ' and self.state.exist_comma and not self.state.exist_space:
+            elif (c == ' ' and self.state.exist_comma
+                    and not self.state.exist_space):
                 self.state.exist_space = True
                 return True
-            elif c == '"' and self.state.exist_comma and self.state.exist_space:
+            elif (c == '"' and self.state.exist_comma
+                    and self.state.exist_space):
                 self.state.exist_comma = False
                 self.state.exist_space = False
                 self.state.in_string = True
                 self.state.mode = Mode.PARAMETER_VALUE_KEY
                 return True
-            elif c == '}' and not self.state.exist_comma and not self.state.exist_space:
+            elif (c == '}' and not self.state.exist_comma
+                    and not self.state.exist_space):
                 self.state.mode = Mode.END_LINE_BREAK
                 return True
             else:
@@ -285,13 +287,16 @@ class JsonChecker:
                 return False
 
         elif mode == Mode.END:
-            if c == '}' and not self.state.exist_brace and not self.state.exist_comma:
+            if (c == '}' and not self.state.exist_brace
+                    and not self.state.exist_comma):
                 self.state.exist_brace = True
                 return True
-            elif c == ',' and self.state.exist_brace and not self.state.exist_comma:
+            elif (c == ',' and self.state.exist_brace
+                    and not self.state.exist_comma):
                 self.state.exist_comma = True
                 return True
-            elif c == '\n' and self.state.exist_brace and self.state.exist_comma:
+            elif (c == '\n' and self.state.exist_brace
+                    and self.state.exist_comma):
                 self.state.exist_brace = False
                 self.state.exist_comma = False
                 self.state.mode = Mode.DONE
@@ -301,7 +306,6 @@ class JsonChecker:
 
         else:
             return False
-
 
     def feed_string(self, c: str) -> bool:
         if c == '"':
@@ -318,7 +322,9 @@ class JsonChecker:
             elif self.state.mode == Mode.PARAMETER_VALUE_KEY:
                 self.state.mode = Mode.PARAMETER_VALUE_COLON_SPACE
             elif self.state.mode == Mode.PARAMETER_VALUE_VALUE:
-                self.state.mode = Mode.PARAMETER_VALUE_COMMA_SPACE_QUOTE_OR_CLOSE
+                self.state.mode = (
+                    Mode.PARAMETER_VALUE_COMMA_SPACE_QUOTE_OR_CLOSE
+                )
             return True
 
         elif c == '\\' and not self.state.in_escape and not self.state.in_hex:
@@ -335,7 +341,8 @@ class JsonChecker:
             else:
                 return False
         elif self.state.in_hex:
-            if c in "0123456789abcdefABCDEF" and self.state.escape_num < 4:
+            if (c in "0123456789abcdefABCDEF"
+                    and self.state.escape_num < 4):
                 if self.state.escape_num < 3:
                     self.state.escape_num += 1
                     return True
@@ -344,8 +351,7 @@ class JsonChecker:
                     self.state.in_hex = False
                     self.state.in_escape = False
                     return True
-            else:
-                return False
+            return False
         elif ord(c) < 0x20:
             return False
         else:
@@ -356,9 +362,15 @@ class JsonChecker:
         # ---- 数字なら ----
         if c.isdigit():
             if s == NumState.START:
-                self.state.num_state = NumState.INT_ZERO if c == "0" else NumState.INT
+                self.state.num_state = (
+                    NumState.INT_ZERO if c == "0"
+                    else NumState.INT
+                )
             elif s == NumState.MINUS:
-                self.state.num_state = NumState.INT_ZERO if c == "0" else NumState.INT
+                self.state.num_state = (
+                    NumState.INT_ZERO if c == "0"
+                    else NumState.INT
+                )
             elif s == NumState.INT_ZERO:
                 return False  # 先頭ゼロの後に数字は続けられない
             elif s == NumState.INT:
@@ -387,7 +399,8 @@ class JsonChecker:
             return True
 
         # 数値として続けられない文字が来た → 数値を終了し、通常モードで再処理
-        if s not in (NumState.INT_ZERO, NumState.INT, NumState.FRAC, NumState.EXP):
+        if s not in (NumState.INT_ZERO, NumState.INT,
+                     NumState.FRAC, NumState.EXP):
             return False
 
         self.state.in_number = False
@@ -399,7 +412,7 @@ class JsonChecker:
         num = self.state.literal_num
         if num >= len(target) or target[num] != c:
             return False
-        self.state.literal_num +=  1
+        self.state.literal_num += 1
         if self.state.literal_num == len(target):
             if target == self.PROMPT:
                 self.state.mode = Mode.PROMPT_VALUE

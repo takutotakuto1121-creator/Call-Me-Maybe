@@ -5,8 +5,12 @@ import math
 import sys
 import numpy as np
 
+
 class ConstrainedLLM:
-    def __init__(self, model: Small_LLM_Model, checker: JsonChecker, animation: bool):
+    def __init__(
+        self, model: Small_LLM_Model,
+        checker: JsonChecker, animation: bool
+    ) -> None:
         self.model = model
         self.vocab_path = self.model.get_path_to_vocab_file()
         with open(self.vocab_path) as f:
@@ -32,7 +36,9 @@ class ConstrainedLLM:
 
         for _ in range(100):
             saved_state = self.checker.snapshot()
-            logits: list[float] = self.model.get_logits_from_input_ids(token_ids)
+            logits: list[float] = (
+                self.model.get_logits_from_input_ids(token_ids)
+            )
 
             logits_arr = np.array(logits)
             sorted_indices = np.argsort(-logits_arr)
@@ -48,17 +54,31 @@ class ConstrainedLLM:
 
             else:
                 self.checker.restore(saved_state)
-            
-            if not valid_token_found:
-                raise RuntimeError("No valid JSON token found. Stopped generating\n")
 
-            next_token_id = max(range(len(masked_logits)), key=lambda i: masked_logits[i])
+            if not valid_token_found:
+                raise RuntimeError(
+                    "No valid JSON token found. "
+                    "Stopped generating\n"
+                )
+
+            next_token_id = max(
+                range(len(masked_logits)),
+                key=lambda i: masked_logits[i]
+            )
 
             # ---debug---
-            # valid_candidates = [(i, new_logits[i]) for i in range(len(new_logits)) if new_logits[i] != -math.inf]
+            # valid_candidates = [
+            #     (i, new_logits[i])
+            #     for i in range(len(new_logits))
+            #     if new_logits[i] != -math.inf
+            # ]
             # valid_candidates.sort(key=lambda x: -x[1])
             # top5 = valid_candidates[:5]
-            # print("TOP5 valid tokens:", [(self.vocab_rev.get(i), score) for i, score in top5])
+            # print(
+            #     "TOP5 valid tokens:",
+            #     [(self.vocab_rev.get(i), score)
+            #      for i, score in top5]
+            # )
             # ---debug---
 
             # chosen_text = self.vocab_rev.get(next_token_id)
@@ -67,9 +87,9 @@ class ConstrainedLLM:
                 self.checker.check(chosen_text)
 
             if self.animation:
-                print(chosen_text, end = "")
+                print(chosen_text, end="")
                 sys.stdout.flush()
-            
+
             token_ids.append(next_token_id)
             if self.checker.is_completed():
                 break
@@ -77,5 +97,7 @@ class ConstrainedLLM:
         generated_ids = token_ids[prompt_token_length:]
         result = ""
         for id in generated_ids:
-            result += self.decoded_tokens.get(id)
+            token = self.decoded_tokens.get(id)
+            if token is not None:
+                result += token
         return result

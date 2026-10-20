@@ -12,7 +12,7 @@ class FunctionCallResult(BaseModel):
     parameters: dict[str, Any]
 
 
-def build_system_prompt(functions: list[FunctionItem]) -> list[str]:
+def build_system_prompt(functions: list[FunctionItem]) -> str:
     function_list = ""
     for func in functions:
         func_description = (
@@ -40,7 +40,7 @@ def build_system_prompt(functions: list[FunctionItem]) -> list[str]:
     )
 
 
-def make_json_output(system_prompt: str):
+def make_json_output(system_prompt: str) -> None:
     parse = Parse()
     args = parse.parse_args()
     if args.test is not None:
@@ -57,7 +57,6 @@ def make_json_output(system_prompt: str):
     llm = ConstrainedLLM(small_llm, json_checker, animation)
 
     prompts = parse.load_prompts()
-    functions = parse.load_functions()
 
     if test:
         prompt = prompts[0]
@@ -91,7 +90,9 @@ def make_json_output(system_prompt: str):
         with open("data/output/function_calling_results.json", mode="w") as f:
             f.write(results)
         try:
-            content = parse.load_json("data/output/function_calling_results.json")
+            content = parse.load_json(
+                "data/output/function_calling_results.json"
+            )
             [FunctionCallResult(**item) for item in content]
         except RuntimeError as e:
             system_prompt += f"DON'T make this error {e}"
@@ -101,7 +102,7 @@ def make_json_output(system_prompt: str):
             make_json_output(system_prompt)
 
 
-def main():
+def main() -> None:
     parse = Parse()
     functions = parse.load_functions()
     system_prompt = build_system_prompt(functions)

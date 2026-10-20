@@ -1,17 +1,26 @@
 import json
 import argparse
 from pydantic import BaseModel, Field, ValidationError
+from typing import Any
+
 
 class Options(BaseModel):
     input_prompt: str = Field(default="data/input/function_calling_tests.json")
-    input_functions: str = Field(default="data/input/functions_definition.json")
-    output_path: str = Field(default="data/output/function_calls.json")
+    input_functions: str = Field(
+        default="data/input/functions_definition.json"
+    )
+    output_path: str = Field(
+        default="data/output/function_calls.json"
+    )
+
 
 class PromptItem(BaseModel):
     prompt: str
 
+
 class FunctionCentre(BaseModel):
     type: str
+
 
 class FunctionItem(BaseModel):
     name: str
@@ -19,8 +28,9 @@ class FunctionItem(BaseModel):
     parameters: dict[str, FunctionCentre]
     returns: FunctionCentre
 
+
 class Parse:
-    def __init__(self):
+    def __init__(self) -> None:
         self.options = self.get_options()
 
     def parse_args(self) -> argparse.Namespace:
@@ -46,20 +56,27 @@ class Parse:
         except ValidationError as e:
             raise RuntimeError(f"INvalid Option: {e}")
 
-
-    def load_json(self, path:str) -> list[dict]:
+    def load_json(self, path: str) -> list[dict[str, Any]]:
         # 構文的に正しいJSONか、そもそもfileがあるのかをチェック
         try:
             with open(path) as f:
                 json_content = json.load(f)
         except FileNotFoundError as e:
-            raise RuntimeError(f"Input file {self.options.input_prompt} not found: {e}")
+            raise RuntimeError(
+                f"Input file {self.options.input_prompt}"
+                f" not found: {e}"
+            )
         except json.JSONDecodeError as e:
-            raise RuntimeError(f"Invalid JSON syntax in {self.options.input_prompt}: {e}")
+            raise RuntimeError(
+                f"Invalid JSON syntax in"
+                f" {self.options.input_prompt}: {e}"
+            )
         # JSONが、[{"prompt": "aaa"}, {"prompt": "bbb"}]
         # この形式のJSONであるかをチェック. topがリスト
         if not isinstance(json_content, list):
-            raise RuntimeError(f"Invalid JSON. JSON's top should be list")
+            raise RuntimeError(
+                "Invalid JSON. JSON's top should be list"
+            )
         return json_content
 
     def load_prompts(self) -> list[PromptItem]:
@@ -70,7 +87,10 @@ class Parse:
             prompt_items = [PromptItem(**item) for item in json_content]
             return prompt_items
         except ValidationError:
-            raise RuntimeError(f'Invalid JSON key: value should be like "prompt": "aaa')
+            raise RuntimeError(
+                'Invalid JSON key: value should be'
+                ' like "prompt": "aaa'
+            )
 
     def load_functions(self) -> list[FunctionItem]:
         '''function_definitionが要件のJSON形式に則っていればloadする。'''
@@ -80,4 +100,4 @@ class Parse:
             functions_item = [FunctionItem(**item) for item in json_content]
             return functions_item
         except ValidationError:
-            raise RuntimeError(f"Invalid JSON ")
+            raise RuntimeError("Invalid JSON ")
