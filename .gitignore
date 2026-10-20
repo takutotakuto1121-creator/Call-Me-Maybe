@@ -3,3 +3,4 @@ call_me_maybe.pdf
 .venv/
 .python-version
 uv.lock
+data/output/
