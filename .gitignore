@@ -4,3 +4,4 @@ call_me_maybe.pdf
 .python-version
 uv.lock
 data/output/
+.mypy_cache

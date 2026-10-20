@@ -1,6 +1,6 @@
 import json
 import argparse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Any
 
 
@@ -20,6 +20,12 @@ class PromptItem(BaseModel):
 
 class FunctionCentre(BaseModel):
     type: str
+
+    @model_validator(mode="after")
+    def validate(self):
+        if self.type not in ("string", "number", "boolean"):
+            raise ValueError
+        return self
 
 
 class FunctionItem(BaseModel):
@@ -99,5 +105,5 @@ class Parse:
         try:
             functions_item = [FunctionItem(**item) for item in json_content]
             return functions_item
-        except ValidationError:
+        except (ValidationError, ValueError):
             raise RuntimeError("Invalid JSON ")

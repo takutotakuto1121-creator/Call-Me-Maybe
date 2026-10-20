@@ -4,6 +4,7 @@ from .check_json import JsonChecker
 from llm_sdk import Small_LLM_Model
 from typing import Any
 from pydantic import BaseModel, ValidationError
+import pathlib
 
 
 class FunctionCallResult(BaseModel):
@@ -87,6 +88,10 @@ def make_json_output(system_prompt: str) -> None:
             results += result
         results = results[:-2]
         results += "\n]"
+
+        path = pathlib.Path(parse.options.output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
         with open("data/output/function_calling_results.json", mode="w") as f:
             f.write(results)
         try:
