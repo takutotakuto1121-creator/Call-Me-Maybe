@@ -28,6 +28,7 @@ clean:
 
 fclean: clean
 	rm -rf .venv/
+	rm -rf data/output/
 
 lint:
 	$(FLAKE8) src
