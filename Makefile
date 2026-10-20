@@ -7,7 +7,7 @@ FLAGS	= --warn-return-any --warn-unused-ignores \
 .PHONY = install run test debug clean lint lint-strict
 
 install:
-	uv pip install -r .
+	uv sync
 
 run:
 	uv run python3 -m src
