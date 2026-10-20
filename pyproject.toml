@@ -32,5 +32,6 @@ dev = [
 package = false
 
 [tool.mypy]
+python_version = "3.14"
 ignore_missing_imports = true
 disable_error_code = ["misc", "no-any-return"]

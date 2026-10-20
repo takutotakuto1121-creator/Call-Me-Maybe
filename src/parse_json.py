@@ -1,7 +1,7 @@
 import json
 import argparse
 from pydantic import BaseModel, Field, ValidationError, model_validator
-from typing import Any
+from typing import Any, Self
 
 
 class Options(BaseModel):
@@ -21,8 +21,8 @@ class PromptItem(BaseModel):
 class FunctionCentre(BaseModel):
     type: str
 
-    @model_validator(mode="after")
-    def validate(self):
+    @model_validator(mode="after")  # type: ignore[untyped-decorator]
+    def validate(self) -> Self:
         if self.type not in ("string", "number", "boolean"):
             raise ValueError
         return self

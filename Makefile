@@ -1,6 +1,6 @@
-FLAKE8 = flake8
-MYPY = mypy
-FLAGS = --warn-return-any --warn-unused-ignores \
+FLAKE8	= flake8
+MYPY	= mypy
+FLAGS	= --warn-return-any --warn-unused-ignores \
 --ignore-missing-imports --disallow-untyped-defs \
 --check-untyped-defs
 
