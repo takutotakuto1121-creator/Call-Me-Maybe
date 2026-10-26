@@ -55,7 +55,9 @@ def make_json_output(system_prompt: str) -> None:
 
     small_llm = Small_LLM_Model()
     json_checker = JsonChecker()
-    llm = ConstrainedLLM(small_llm, json_checker, animation)
+    llm = ConstrainedLLM(
+        small_llm, json_checker, animation, parse.load_functions()
+    )
 
     prompts = parse.load_prompts()
 
