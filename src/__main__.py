@@ -16,27 +16,17 @@ class FunctionCallResult(BaseModel):
 def build_system_prompt(functions: list[FunctionItem]) -> str:
     function_list = ""
     for func in functions:
-        func_description = (
-            f"name: {func.name}\n"
-            f"description: {func.description}\n"
-            f"parameters: {func.parameters}\n"
-            f"returns: {func.returns}\n\n"
+        params = ", ".join(
+            f"{key}: {item.type}" for key, item in func.parameters.items()
         )
-        function_list += func_description
+        function_list += f"{func.name}({params}): {func.description}\n"
 
     return (
-        "you are a helpful assistant that generate JSON data. "
-        "user asks you some questions and you will generate only JSON data. "
-        "JSON data should be like this.\n"
-        "  {\n"
-        '    "prompt": "What is the sum of 2 and 3?",\n'
-        '    "name": "fn_add_numbers",\n'
-        '    "parameters": {"a": 2.0, "b": 3.0}\n'
-        "  },\n"
-        "prompt is user's prompt."
-        "name is function name you call in order to solve user's question."
-        "parameters are parameters of functions you call."
-        "this is the list of functions and their features you can choose.\n"
+        "Output JSON: the user's prompt, the name of the function to call, "
+        "and its parameters.\n"
+        'Example: {"prompt": "What is the sum of 2 and 3?", '
+        '"name": "fn_add_numbers", "parameters": {"a": 2.0, "b": 3.0}}\n'
+        "Functions:\n"
         f"{function_list}"
     )
 
