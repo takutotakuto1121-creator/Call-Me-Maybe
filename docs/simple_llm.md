@@ -1,9 +1,9 @@
 # Simple LLM
-普段LLMとはGUI上で会話のような形式で文章のやり取りを行なっている人が多いでしょう。これを、`encode`, `decode`, `get_logits_from_input_ids` のみを用いて実装するにはどうすれば良いのかを考えます。
+Most people usually interact with LLMs through a GUI, exchanging text in a conversational format. Let's think about how to implement this using only `encode`, `decode`, and `get_logits_from_input_ids`.
 
-LLMは、文章が与えられると、それを単語などの最小単位(トークン)に分割し、最小単位ごとに対応する数字IDを割り当てます(エンコード)。次にそのトークンIDのリストを受け取り、次にくるトークンを予測します。これを何回も繰り返します。次に来るトークンを何回も予測して、最後にIDを文字に直し(デコード)て出力します。
+When given text, an LLM splits it into minimal units such as words (tokens) and assigns a numeric ID to each unit (encoding). It then takes that list of token IDs and predicts the next token. This is repeated many times: the model keeps predicting the next token, and finally converts the IDs back into text (decoding) and outputs it.
 
-これをそのままコードにすると以下のようになります。
+Translated directly into code, this looks like the following:
 
 ```python
 from llm_sdk import Small_LLM_Model
@@ -16,23 +16,23 @@ class SimpleLLM:
     def generate(
             self, prompt: str, max_new_tokens: int = 50
             ) -> str:
-        # エンコード
+        # Encode
         token_ids: list[int] = self.model.encode(prompt).tolist()[0]
 
         for _ in range(max_new_tokens):
-            # 次に来るトークンの確率をlogitsに
+            # Get the probabilities of the next token as logits
             logits: list[float] = self.model.get_logits_from_input_ids(token_ids)
 
-            # 一番確率が高いトークンをmax_token_idに
+            # Take the token with the highest probability as next_token_id
             next_token_id = max(range(len(logits)), key=lambda i: logits[i])
-            # トークンを決定してまた次のトークンを予測するためにループを繰り返す
+            # Fix the token and loop again to predict the next one
             token_ids.append(next_token_id)
 
-        # デコード
+        # Decode
         result = self.model.decode(token_ids)
         return result
 ```
 
-これが何も強制しない時のLLMの使用方法になります。
+This is how an LLM is used when nothing is constrained.
 
-では、ここからどの部分に介入すれば自分が望む形式の出力に強制できるのでしょうか。それは、次に来るトークンの確率のリスト`logits`の生成過程です。この過程に介入して、次のトークンがもし適さないトークンであれば、その確率を手動で*-inf*に飛ばし、新たな`masked logits`を作成すれば良いです。
+So where should we intervene to force the output into the format we want? The answer is the process that produces `logits`, the list of probabilities for the next token. By intervening in this process and manually setting the probability of any unsuitable next token to *-inf*, creating a new `masked logits`, we can achieve this.

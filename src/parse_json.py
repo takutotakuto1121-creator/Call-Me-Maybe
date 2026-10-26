@@ -21,8 +21,8 @@ class PromptItem(BaseModel):
 class FunctionCentre(BaseModel):
     type: str
 
-    @model_validator(mode="after")  # type: ignore[untyped-decorator]
-    def validate(self) -> Self:
+    @model_validator(mode="after")
+    def validate_type(self) -> Self:
         if self.type not in ("string", "number", "boolean"):
             raise ValueError
         return self

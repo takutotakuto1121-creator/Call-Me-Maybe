@@ -1,7 +1,7 @@
 # Json Checker
-文字列を受け取り、その文字列が適切に指定されたJSONの形式を満たしているかをチェックするクラスです。
+A class that receives a string and checks whether it correctly satisfies the specified JSON format.
 
-作成するJsonは以下の形式です。
+The JSON to be produced has the following format:
 
 ```json
   {
@@ -21,7 +21,7 @@
   },
 ```
 
-このJSONに対して、自分は今どこにいるのか、状態を列挙します。状態を列挙したクラスが以下のModeクラスです。
+For this JSON, we enumerate the states describing where we currently are. The class enumerating these states is the Mode class below.
 
 ```python
 from enum import Enum, auto
@@ -58,10 +58,10 @@ class Mode(Enum):
 ```
 
 
-name, description, parametersそれぞれのkey, valueのどの部分に今現在いるのかという情報を持っておきます。
+We keep track of which part (key or value) of name, description, or parameters we are currently in.
 
-例えば、今NAME_LINE_BREAKにいるなら、次に来るのは改行("\n")しか許されないので、次のトークンが改行で始まるならTrue, 始まらないならFalseを返します。のように各状態で次に来てもいいトークンかそうでないトークンかを判定しています。
+For example, if we are currently in NAME_LINE_BREAK, the only thing allowed next is a newline ("\n"), so we return True if the next token starts with a newline and False otherwise. In this way, each state determines whether a token is allowed to come next.
 
-jsonの形式については[json.org](json.org)を参照してください。
+For the JSON format, see [json.org](https://www.json.org).
 
-あとはコードを読めばわかると思います。
+The rest should be clear from reading the code.

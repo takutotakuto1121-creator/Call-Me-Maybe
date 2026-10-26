@@ -1,5 +1,5 @@
 # Constrained LLM
-では、ここからどの部分に介入すれば自分が望む形式の出力に強制できるのでしょうか。それは、次に来るトークンの確率のリスト`logits`の生成過程です。この過程に介入して、次のトークンがもし適さないトークンであれば、その確率を手動で**-inf**に飛ばし、新たな`masked logits`を作成すれば、そのトークンは次のトークンとして選ばれることは無くなるので、トークン選択の際に、適しているトークンのうち、確率が最も高いトークンが選択されることになります。SimpleLLMを改良して以下のConstrainedLLMを作成します。
+So where should we intervene to force the output into the format we want? The answer is the process that produces `logits`, the list of probabilities for the next token. By intervening in this process and manually setting the probability of any unsuitable next token to **-inf**, creating a new `masked logits`, that token can never be chosen as the next token. As a result, token selection picks the highest-probability token among the suitable ones. We improve SimpleLLM to build the following ConstrainedLLM.
 
 ```python
 from llm_sdk import Small_LLM_Model
@@ -16,32 +16,32 @@ class ConstrainedLLM:
     def generate(
             self, prompt: str, max_new_tokens: int = 50
             ) -> str:
-        # エンコード
+        # Encode
         token_ids: list[int] = self.model.encode(prompt).tolist()[0]
 
         for _ in range(max_new_tokens):
-            # 次に来るトークンの確率をlogitsに
+            # Get the probabilities of the next token as logits
             logits: list[float] = self.model.get_logits_from_input_ids(token_ids)
 
-            # ---- ここで何かしらのチェックを行う ----
+            # ---- Perform some kind of check here ----
             masked_logits = ...
             # ------------
 
-            # 一番確率が高いトークンをmax_token_idに(logitsをmasked_logitsに変更)
+            # Take the token with the highest probability as next_token_id (logits replaced with masked_logits)
             next_token_id = max(range(len(masked_logits)), key=lambda i: masked_logits[i])
-            # トークンを決定してまた次のトークンを予測するためにループを繰り返す
+            # Fix the token and loop again to predict the next one
             token_ids.append(next_token_id)
 
-        # デコード
+        # Decode
         result = self.model.decode(token_ids)
         return result
 ```
 
-以上の場所で何かしらのチェックを行い、以下の`logits`を`masked_logits`に変更すれば良いです。
+All we need to do is perform some kind of check at the location above and turn `logits` into `masked_logits`.
 
-何かしらのチェッカー(`self.checker`)でチェックを行いますがは今は置いておきます。
+The check is done by some checker (`self.checker`), but let's set that aside for now.
 
-例えば以下のような方法が考えられます。
+For example, the following approach is possible:
 
 ```python
 masked_logits = []
@@ -52,11 +52,11 @@ for index, logit in enumerate(logits):
         masked_logits.append(logit)
 ```
 
-indexは、logitsの数分だけ0から順番に取り出しているため、これは**token_id**を表します。**全て**のtoken_idに対してチェックを行い、それがJSONの形式に敵さなければそのIDの`masked_logits`は-infに飛ばします。そのため、適しているtoken_IDのみが選択されるようになります。全てが-infになる場合の例外処理行うべきですが簡単のために一旦スルーします。
+Since `index` runs from 0 through the number of logits in order, it represents a **token_id**. We check **every** token_id, and if it does not fit the JSON format, its entry in `masked_logits` is set to -inf. As a result, only suitable token IDs can be selected. We should handle the case where everything becomes -inf, but we skip that for simplicity.
 
-ただ、この実装では毎回全てのトークン１つを選択するごとにトークンIDを選択するごとに全てのトークンIDを呼び出し、全てのトークンIDに対してチェックを行うので、かなり処理に時間がかかってしまいます。
+However, with this implementation, every time a single token is selected, all token IDs are iterated over and checked, which takes a very long time.
 
-そこで、以下のように順番を少し入れ替えてみます。
+So let's slightly change the order, as follows:
 
 ```python
 masked_logits = [-math.inf] * len(logits)
@@ -66,21 +66,21 @@ sorted_indices = sorted(
     reverse=True
     )
 
-for index in sorted_indecies:
+for index in sorted_indices:
     if self.check_json(token_ids, index):
         masked_logits[index] = logits[index]
         break
 ```
 
-まずlogitが大きい順にindexを並び替えた`sorted_indecies`を作成します。この順番にindexを取り出していき、チェックをかけていき、JSONフォーマットに適したものが出てきた時点でbreakでループを抜け出します。
+First, we create `sorted_indices`, the indices sorted in descending order of logit. We take indices in this order and check each one, breaking out of the loop as soon as one that fits the JSON format appears.
 
-全てに対してチェックを行い、不適なindexのligitを-infに飛ばしてそのうちの最大logitのindexを次のトークンIDとする作業と、先にlogitが大きい順でindexを並び替えて、順番に適しているか判断して、適していればそのindexをトークンIDとする作業では、結局同じindexを取ることになります。
+Checking every index, setting the logits of unsuitable indices to -inf, and taking the index of the maximum remaining logit as the next token ID gives the same index as sorting indices by logit first and taking the first suitable one in order.
 
-よって同じ結果が出てくるのに対して、前者では全てに対してチェックを毎回行いのでとんでもない数のチェックが必要になり、後者ではチェックをしていき一度的してものが出てきた時点でチェックのループを抜けるので必要なチェック数が桁違いに減ります。なのでこの実装の方が圧倒的に実行速度が速くなり、速度が大幅に改善されました。
+So both produce the same result, but the former performs a check on every token each time, requiring an enormous number of checks, while the latter exits the check loop as soon as a suitable token is found, reducing the number of checks by orders of magnitude. This implementation is therefore overwhelmingly faster, and speed improved dramatically.
 
-課題の指示で、* You set logits for invalid tokens (those breaking the schema or structure) tonegative infinity.*とあるので、`masked_logits`を作る必要があり、少し不格好になって入る点はありますが。
+The subject states *You set logits for invalid tokens (those breaking the schema or structure) to negative infinity.*, so we need to build `masked_logits`, which makes the code a bit awkward.
 
-あと一点著しくスピードを損ねている点があります。それは以下の部分です。
+There is one more spot that severely hurts speed:
 
 ```python
     def check_json(self, next_token_id: int) -> bool:
@@ -88,19 +88,19 @@ for index in sorted_indecies:
         return self.checker.check(next_token_text)
 ```
 
-毎回`next_token_id`を`decode`しています。`decode`は処理が遅いので、毎回呼び出していては処理がとても遅くなってしまいます。そのため、decodeを呼び出す回数はなるべく少なくしたいです。
+It calls `decode` on `next_token_id` every time. `decode` is slow, so calling it every time makes processing very slow. We therefore want to call `decode` as few times as possible.
 
-よって最初と最後に一回ずつ呼び出す形式にします。最初にdecodeを呼び出し、それを辞書にしておき、`check_json`ではその辞書を用いてトークンIDをトークンのテキストの変換を行うようにします。以上のようにしてConstrainedLLMを実行速度を速くしながら作成しました。
+So we call it only once at the beginning and once at the end. At the beginning, we call `decode` and store the results in a dictionary, and `check_json` uses that dictionary to convert token IDs into token text. This is how ConstrainedLLM was built while keeping it fast.
 
-おまけで`logits`のソートはbuiltinの`sorted`ではなく、numpyの`argsort`を使うことにより少しだけ高速化しています。
+As a small extra, sorting `logits` uses numpy's `argsort` instead of the builtin `sorted`, which makes it slightly faster.
 
-まだいくらでも速くしようはあります。
-例えば、そもそも`decode`自体が遅いので、一度も使わないようにする方法です。
+There are still many ways to make it faster.
+For example, since `decode` itself is slow, one approach is to never use it at all.
 
-`get_path_to_vocab_file`でトークンテキストとトークンIDの対応表のパスをゲットし、それを持ってきてデコードの代わりにその辞書を用いる方法です。
+`get_path_to_vocab_file` gives the path to the mapping between token text and token IDs, and that dictionary can be used instead of decoding.
 
-この方法では、この辞書は例えばスペース(" ")がĠとなっていたり、改行("\n)がĊになっていたりするトークン化けと呼ばれる非表示文字を強制的に表示させる方式が取られています。checkerでJSONのチェックをする際にこの非表示文字のせいでうまくいかなくなるのでこれに対応してあげればさらに速くなります。
+In this dictionary, invisible characters are forcibly rendered visible, e.g. a space (" ") becomes Ġ and a newline ("\n") becomes Ċ (so-called token mojibake). These invisible-character representations break the JSON check in the checker, so handling them would make it even faster.
 
-ただ今回はLLMの入門なのでこのくらいに留めておきます。
+However, since this is an introduction to LLMs, we stop here.
 
-あとタブのように以降の文が1意に定まればLLMを介さずに確定させる仕組みで速度を３倍以上早くしました。
+Also, a mechanism that fixes the following text without going through the LLM whenever it is uniquely determined (like tab completion) made it more than 3 times faster.

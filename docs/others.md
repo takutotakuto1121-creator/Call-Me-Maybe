@@ -1,33 +1,33 @@
-# その他
+# Others
 ## Design decisions
-- バリデーションには`pydantic`, `json`を使用しました。使い慣れているからです。
-- ConstrainedLLMの`decode`は最初と最後の１回のみにしました。速度が速くなるからです。
-- JsonCheckerにはスタックは使用していません。JSONのフォーマットが詳しく指定されていたため、ネストは考える必要がなかったからです。
+- `pydantic` and `json` are used for validation, because I am used to them.
+- ConstrainedLLM calls `decode` only once at the beginning and once at the end, because it is faster.
+- JsonChecker does not use a stack. The JSON format was specified in detail, so there was no need to handle nesting.
 
 ## Performance analysis
-- Accuracy: かなり正確です。90%以上は正確な出力が返ってきます。
-- Speed: 課題要件の5分以内はクリアしています。ただ、まだまだ改善の余地はあります。
-- Reliability: パースを完璧に行っているのでクラッシュはしません。エラーハンドリングも厳しく行っています。
+- Accuracy: Quite accurate. More than 90% of the outputs are correct.
+- Speed: Meets the subject's requirement of finishing within 5 minutes, though there is still plenty of room for improvement.
+- Reliability: Parsing is done thoroughly, so it does not crash. Error handling is also strict.
 
-## Callenges faced
-- [ConstrainedLLM](constrained.md)を作成する際に、実行速度が極めて遅くなる課題に直面しました。`decode`を何回も行っていたことと、`check_json`の際に全てのトークンに対してチェックを行っていたことが主な原因でした。`decode`を最初と最後のみにし、トークンのチェックは確率が高い順番にしていくようにして実行速度を早くしました。
-- [JsonChecker](json_checker.md)を作成する際に、最初はまず100%正しいJSONの出力になるようにチェックし、その後に指定した形式化をチェックしようとしました。なんなら形式も自由に指定できるようにしようとしていました。ただこの実装が現時点の力では難しかったので簡略化し、課題要件を満たすのみの実装にすることにより解決しました。もう少し力をつけてかたその実装にも挑戦したいです。
+## Challenges faced
+- When building [ConstrainedLLM](constrained.md), I faced the problem of extremely slow execution. The main causes were calling `decode` many times and checking every token in `check_json`. I sped it up by calling `decode` only at the beginning and the end, and by checking tokens in descending order of probability.
+- When building [JsonChecker](json_checker.md), I initially tried to first guarantee 100% valid JSON output and then check that it matched the specified format. I even wanted to let the format be specified freely. However, that implementation was too difficult for my current skill level, so I simplified it and solved the problem by implementing only what the subject requires. I would like to take on that implementation once I have improved my skills.
 
-## Testing stratgy
-`input/function_calling_tests.json`の最初のプロンプト、`input/function_definition.json`を自分の好きなように変更し、以下のコマンドで実行し、出力を確かめることによりテストができます。
+## Testing strategy
+You can test by editing the first prompt in `input/function_calling_tests.json` and `input/function_definition.json` however you like, running the following command, and checking the output.
 
 ```bash
 make test
 ```
 
 ## Example Usage
-inputディレクトリのファイルはデフォルトのままで以下のコマンドで実行してください。
+Leave the files in the input directory as their defaults and run the following command:
 ```bash
 make run
 ```
 
 ## Bonus Part
-以下のボーナスに対応
-- 高度なエラー復旧メカニズムの実装: jsonファイルを作成し、出力閣下を書き込んだ後に、それがjsonの形式を満たしているかを`json.load()`により確認する。エラーが出た場合はsystem promptにこのエラーを出さないようにもう一度作り直してくださいと追記して再生成をするようにしました。
-- テストの作成: `make test`で最初のプロンプトに対する出力結果のみを標準出力に出力するようにすることにより、簡単にテストができるようにしました。
-- 生成過程の可視化: `make test`, `make animation`による実行では、１つのトークンを生成するごとにそれを標準出力に出力することにより、生成過程がアニメーションで見えるようにしました。
+The following bonuses are supported:
+- Advanced error recovery mechanism: after creating the JSON file and writing the output to it, `json.load()` is used to verify that it satisfies the JSON format. If an error occurs, a note asking the model to regenerate without producing that error is appended to the system prompt, and the output is regenerated.
+- Test creation: `make test` prints only the output for the first prompt to standard output, making testing easy.
+- Visualization of the generation process: when running with `make test` or `make animation`, each token is printed to standard output as it is generated, so the generation process can be seen as an animation.

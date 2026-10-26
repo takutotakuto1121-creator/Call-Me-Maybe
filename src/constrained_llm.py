@@ -3,7 +3,6 @@ from .check_json import JsonChecker, Mode
 from .parse_json import FunctionItem
 import json
 import math
-import sys
 import numpy as np
 
 

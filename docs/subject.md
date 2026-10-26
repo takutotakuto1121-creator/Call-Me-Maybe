@@ -1,42 +1,42 @@
 # Subject Requirement
 ## Summary
-LLMを用いて、自然言語のプロンプトを構造化された関数呼び出しに変換するツールを作成します。
+Build a tool that uses an LLM to convert natural-language prompts into structured function calls.
 
-例えば、*What is the sum of 40 and 2?*というプロンプトが与えられれば、以下の内容を返します。
+For example, given the prompt *What is the sum of 40 and 2?*, it returns the following:
 
-- 関数の名前: fn_add_numbers
-- 引数: {"a": 40.0, "b": 2.0}
+- Function name: fn_add_numbers
+- Arguments: {"a": 40.0, "b": 2.0}
 
-**Constrained Decoding**を用いて、100%正確なJSON形式のアウトプットをすることが求められます。
+The output must be 100% valid JSON, achieved using **Constrained Decoding**.
 ## LLM Model
-**Qwen/Qwen3-0.6B**を使用します。
-`torch`, `transformers`, `huggingface_hub`などを直接使用するのは禁止で、llm_sdkのSmall_LLM_Modelクラスをラッパーとして用います。
-Small_LLM_Modelは以下のメソッドを提供します。
+**Qwen/Qwen3-0.6B** is used.
+Using `torch`, `transformers`, `huggingface_hub`, etc. directly is forbidden; the Small_LLM_Model class in llm_sdk is used as a wrapper.
+Small_LLM_Model provides the following methods:
 1. def encode(self, text: str) -> torch.Tensor:  
-文字列をエンコードします。
-2. def decode(self, ids: torch.Tensor | list[int]) -> str:   
-トークンIDのリストをでコードします。
-3. def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:   
-トークンIDのリストを受け取り、それを元に次に来るトークンの確率のリストを返します。
-4.  def get_path_to_vocab_file(self) -> str:
-トークンIDとトークンの対応表（辞書）へのパスを返します
+Encodes a string.
+2. def decode(self, ids: torch.Tensor | list[int]) -> str:  
+Decodes a list of token IDs.
+3. def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:  
+Takes a list of token IDs and returns the list of probabilities for the next token based on it.
+4. def get_path_to_vocab_file(self) -> str:  
+Returns the path to the mapping (dictionary) between token IDs and tokens.
 
 ## Constrained Decoding
-LLMは、文章が与えられると、それを単語などの最小単位(トークン)に分割し、最小単位ごとに対応する数字IDを割り当てます(エンコード)。次にそのトークンIDのリストを受け取り、次にくるトークンを予測します。これを何回も繰り返します。次に来るトークンを何回も予測して、最後にIDを文字に直し(デコード)て出力します。
+When given text, an LLM splits it into minimal units such as words (tokens) and assigns a numeric ID to each unit (encoding). It then takes that list of token IDs and predicts the next token. This is repeated many times: the model keeps predicting the next token, and finally converts the IDs back into text (decoding) and outputs it.
 
-このうち、次に来るトークンを予測するプロセスに介入し、指定した形式の出力になるようにするのが、**Constrained Decoding** です。
+**Constrained Decoding** intervenes in the step that predicts the next token so that the output follows a specified format.
 
-今回はこのConstrainde Decodingを用いて、100%正確なJSONの形式を満たすようにします。
+In this project, Constrained Decoding is used to guarantee 100% valid JSON output.
 
 ## Performance and Reliability
-出力は以下の条件を満たす必要があります。
-- 90%以上正確な関数選択と引数選択を行うこと。
-- 100%完璧なJSON出力にすること。
-- 標準的なハードウェアで5分以内に実行可能なこと。
-- 完璧なエラーハンドリングをすること。
+The output must satisfy the following conditions:
+- Function selection and argument selection must be more than 90% accurate.
+- JSON output must be 100% valid.
+- It must run within 5 minutes on standard hardware.
+- Error handling must be flawless.
 
 ## Input Files
-プログラムは、以下のような形式のプロンプトが書かれたJSONファイルを受け取ります。
+The program receives a JSON file containing prompts in the following format:
 ```json
 [
   {
@@ -58,7 +58,7 @@ LLMは、文章が与えられると、それを単語などの最小単位(ト�
 ]
 ```
 
-また、使用可能な関数が書かれたJSONファイルも受け取ります。
+It also receives a JSON file describing the available functions:
 ```json
 [
   {
@@ -105,7 +105,7 @@ LLMは、文章が与えられると、それを単語などの最小単位(ト�
 ```
 
 ## Output Files
-プログラムは以下のような形式のJSONファイルを出力します。100%正確なJSON形式になる必要があります。また、項目も**Qwen/Qwen3-0.6B**で90%以上正確に出力される必要があります。
+The program outputs a JSON file in the following format. It must be 100% valid JSON, and its fields must also be produced by **Qwen/Qwen3-0.6B** with more than 90% accuracy.
 ```json
 [
   {
@@ -150,6 +150,3 @@ LLMは、文章が与えられると、それを単語などの最小単位(ト�
 ...
 ]
 ```
-
-
-

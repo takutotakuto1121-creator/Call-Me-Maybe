@@ -2,50 +2,49 @@
 of the 42 curriculum by tsugimot*
 # Call Me Maybe
 ## Description
-**Call Me Maybe**は、42cursusのMilestone3のソロ課題です。
-*Constrained Decoding*を用いて、LLMの出力を指定された形式のJSONでの出力に強制するプログラムを書きます。詳細は[課題要件](docs/subject.md)を見てください。
+**Call Me Maybe** is a solo project in Milestone 3 of the 42 cursus.
+The goal is to write a program that uses *Constrained Decoding* to force an LLM to output JSON in a specified format. See the [subject requirements](docs/subject.md) for details.
 
 ## Instruction
-以下のコマンドで実行します。
+Run the program with the following command:
 ```bash
 make run
 ```
 
-入力ファイルの先頭１つのみのプロンプトに対する出力を標準出力に出力するには以下のコマンドで実行します。
+To print only the output for the first prompt in the input file to standard output, run:
 ```bash
 make test
 ```
 
-トークンの生成過程を標準出力に出力しながら実行するには以下のコマンドで実行します。
+To run while printing the token generation process to standard output, run:
 ```bash
 make animation
 ```
 
-入力ファイル、出力ファイルを指定したければ以下のように実行すれば指定できます。
+To specify the input and output files, run it as follows:
 ```bash
-uv run python -m src [--functions_definition <function_definition_file>] [--input <input_file>] [--
-output <output_file>]
+uv run python -m src [--functions_definition <function_definition_file>] [--input <input_file>] [--output <output_file>]
 ```
 
-## Alhorithm explanation
-### パース
-パースは今更なので割愛。コードを見れば分かります。`pydantic`, `json`を用いてバリデーションをしています。
+## Algorithm explanation
+### Parsing
+Parsing is nothing new, so it is omitted here; the code speaks for itself. Validation is done with `pydantic` and `json`.
 
-### LLMを用いた実装
-まず、Small_LLM_Modelを用いて、普段のように文章を生成させる方法を考えます。[こちら](docs/simple_llm.md)を参照してください。
+### Implementation using the LLM
+First, consider how to make Small_LLM_Model generate text in the usual way. See [here](docs/simple_llm.md).
 
 ### Constrained Decoding
-先ほど作成したSimpleLLMを改造して指定したJSONのフォーマットに従わせる方法を考えます。[こちら](docs/constrained.md)を参照してください。
+Next, consider how to modify the SimpleLLM built above so that it follows a specified JSON format. See [here](docs/constrained.md).
 
-次に文字列が課題要件で指定されたJSONフォーマットに適しているかどうかを確認するチェッカーを作成します。[こちら](docs/json_checker.md)
+Then build a checker that verifies whether a string conforms to the JSON format specified in the subject requirements. See [here](docs/json_checker.md).
 
-## Resouces
+## Resources
 ### AI Usage
-コードは手書きて書いています。
-flake8, mypyエラーの解消のためにAIを用いました。
+The code is written by hand.
+AI was used to resolve flake8 and mypy errors.
 
-### Resouces
-あとでかく
+### Resources
+To be written later.
 
-## その他
-その他のおまけ情報は[こちら](docs/others.md)へ。
+## Others
+For additional bonus information, see [here](docs/others.md).
