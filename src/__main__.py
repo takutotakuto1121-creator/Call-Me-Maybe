@@ -92,11 +92,11 @@ def make_json_output(system_prompt: str) -> None:
         path = pathlib.Path(parse.options.output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open("data/output/function_calling_results.json", mode="w") as f:
+        with open(parse.options.output_path, mode="w") as f:
             f.write(results)
         try:
             content = parse.load_json(
-                "data/output/function_calling_results.json"
+                parse.options.output_path
             )
             [FunctionCallResult(**item) for item in content]
         except RuntimeError as e:
@@ -115,4 +115,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as e:
+        print(f"[Error]{e}")
