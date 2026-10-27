@@ -31,6 +31,15 @@ def build_system_prompt(functions: list[FunctionItem]) -> str:
     )
 
 
+def build_param_types(
+    functions: list[FunctionItem]
+) -> dict[str, dict[str, str]]:
+    return {
+        func.name: {k: v.type for k, v in func.parameters.items()}
+        for func in functions
+    }
+
+
 def make_json_output(system_prompt: str) -> None:
     parse = Parse()
     args = parse.parse_args()
@@ -44,16 +53,16 @@ def make_json_output(system_prompt: str) -> None:
         animation = False
 
     small_llm = Small_LLM_Model()
-    json_checker = JsonChecker()
-    llm = ConstrainedLLM(
-        small_llm, json_checker, animation, parse.load_functions()
-    )
+    functions = parse.load_functions()
+    param_types = build_param_types(functions)
+    json_checker = JsonChecker(param_types)
+    llm = ConstrainedLLM(small_llm, json_checker, animation, functions)
 
     prompts = parse.load_prompts()
 
     if test:
         prompt = prompts[0]
-        llm.checker = JsonChecker()
+        llm.checker = JsonChecker(param_types)
         result = ""
         # print(results)
         # for prompt in prompts:
@@ -67,7 +76,7 @@ def make_json_output(system_prompt: str) -> None:
     else:
         results = "[\n"
         for prompt in prompts:
-            llm.checker = JsonChecker()
+            llm.checker = JsonChecker(param_types)
             result = ""
             # print(results)
             # for prompt in prompts:

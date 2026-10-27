@@ -33,12 +33,14 @@ class ConstrainedLLM:
             return False
         return self.checker.check(next_token_text)
 
-    def unique_candidate(self, partial: str, words: list[str]) -> str:
-        # 候補が1つに絞れるなら、残りの文字列 + 閉じクォートを返す
+    def unique_candidate(
+        self, partial: str, words: list[str], suffix: str = '"'
+    ) -> str:
+        # 候補が1つに絞れるなら、残りの文字列 + suffix を返す
         matched = [w for w in words if w.startswith(partial)]
         if len(matched) != 1:
             return ""
-        return matched[0][len(partial):] + '"'
+        return matched[0][len(partial):] + suffix
 
     def forced_text(self) -> str:
         """今の状態から、次に来る文字列が一意に決まるならそれを返す。"""
@@ -68,7 +70,8 @@ class ConstrainedLLM:
                     k for k in func.parameters
                     if f'"{k}": ' not in params
                 ]
-                return self.unique_candidate(partial, unused)
+                # 自然なトークン列(`":` + ` "`)に合わせ、コロンまでで止める
+                return self.unique_candidate(partial, unused, '":')
             return ""
 
         mode = s.mode
@@ -95,7 +98,7 @@ class ConstrainedLLM:
         if mode == Mode.PARAMETER_SPACE:
             return " " * (4 - s.space_num) + c.PARAMETER
         if mode == Mode.PARAMETER_VALUE_COLON_SPACE:
-            return " " if s.exist_colon else ": "
+            return "" if s.exist_colon else ":"
         if mode == Mode.END_LINE_BREAK:
             return "\n  },\n"
         if mode == Mode.END_SPACE:

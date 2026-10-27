@@ -63,11 +63,18 @@ class JsonState(BaseModel):
     exist_space: bool = Field(default=False)
     exist_brace: bool = Field(default=False)
     exist_line_break: bool = Field(default=False)
+    str_buf: str = Field(default="")
+    func_name: str = Field(default="")
+    expected_type: str = Field(default="")
 
 
 class JsonChecker:
-    def __init__(self) -> None:
+    def __init__(
+        self, param_types: dict[str, dict[str, str]] | None = None
+    ) -> None:
         self.state = JsonState()
+        # {関数名: {引数名: "string" | "number" | "boolean"}}
+        self.param_types = param_types or {}
         self.PROMPT = '"prompt": '
         self.NAME = '"name": '
         self.PARAMETER = '"parameters": {"'
@@ -236,13 +243,17 @@ class JsonChecker:
                 return False
 
         elif mode == Mode.PARAMETER_VALUE_VALUE:
-            if c == '"':
+            t = self.state.expected_type
+            if c == '"' and t in ("", "string"):
                 self.state.in_string = True
                 return True
-            elif c.isdigit() or c == '-':
+            elif (c.isdigit() or c == '-') and t in ("", "number"):
                 self.state.in_number = True
                 self.state.num_state = NumState.START
                 return self.feed_number(c)
+            elif c in "tf" and t == "boolean":
+                self.state.tfn_target = "true" if c == "t" else "false"
+                return self.feed_tfn(c)
             else:
                 return False
 
@@ -315,6 +326,14 @@ class JsonChecker:
             elif self.state.in_hex:
                 return False
             self.state.in_string = False
+            if self.state.mode == Mode.NAME_COMMA:
+                self.state.func_name = self.state.str_buf
+                self.state.str_buf = ""
+            elif self.state.mode == Mode.PARAMETER_VALUE_KEY:
+                self.state.expected_type = self.param_types.get(
+                    self.state.func_name, {}
+                ).get(self.state.str_buf, "")
+                self.state.str_buf = ""
             if self.state.mode == Mode.PROMPT_VALUE:
                 self.state.mode = Mode.PROMPT_COMMA
             elif self.state.mode == Mode.NAME_VALUE:
@@ -355,6 +374,8 @@ class JsonChecker:
         elif ord(c) < 0x20:
             return False
         else:
+            if self.state.mode in (Mode.NAME_COMMA, Mode.PARAMETER_VALUE_KEY):
+                self.state.str_buf += c
             return True
 
     def feed_number(self, c: str) -> bool:
@@ -401,6 +422,11 @@ class JsonChecker:
         # 数値として続けられない文字が来た → 数値を終了し、通常モードで再処理
         if s not in (NumState.INT_ZERO, NumState.INT,
                      NumState.FRAC, NumState.EXP):
+            return False
+
+        # number型は浮動小数点を保証する(整数のまま終了させない)
+        if (self.state.expected_type == "number"
+                and s in (NumState.INT_ZERO, NumState.INT)):
             return False
 
         self.state.in_number = False
